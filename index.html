@@ -11,6 +11,7 @@
 	<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..700&display=swap" rel="stylesheet">
 	<style>
 		:root {
+			--reserve: 16rem;     /* everything that isn't the photo; refined by the script below */
 			--card: #777775;      /* 18% grey card */
 			--paper: #f6f6f3;     /* fibre paper white */
 			--ink: #1c1c1c;       /* pencil / text */
@@ -35,7 +36,8 @@
 		html, body { margin: 0; height: 100%; }
 
 		body {
-			min-height: 100svh;
+			min-height: 100vh;
+			min-height: 100dvh;
 			display: flex;
 			flex-direction: column;
 			align-items: center;
@@ -50,28 +52,19 @@
 			-webkit-font-smoothing: antialiased;
 		}
 
-<<<<<<< HEAD
 		/* The print: paper border, wider at the bottom where the caption goes */
 		.print {
-			width: min(1080px, 100%, calc((100svh - 17rem) * 1.5 + 3rem));
-			min-width: min(100%, 520px);
+			/* image height = viewport height minus everything else; width follows at 3:2.
+			   Fallbacks first for browsers without min() or dvh. */
+			width: 1080px;
+			max-width: 100%;
+			width: min(1080px, 100%, max(18rem, calc((100vh - var(--reserve)) * 1.5 + 3rem + 4px)));
+			width: min(1080px, 100%, max(18rem, calc((100dvh - var(--reserve)) * 1.5 + 3rem + 4px)));
 			margin: 0;
 			padding: 1.5rem 1.5rem 0;
 			background: var(--paper);
 			box-shadow: 0 1px 1px rgba(0,0,0,.18), 0 12px 32px -12px rgba(0,0,0,.35);
 		}
-=======
-						<footer>
-							
-                <p><a href="https://refotografia.wordpress.com/">Blog</a> | 
-                <a href="https://refotografia.github.io/portfolio/">Portfolio</a> | 
-			 <a href="https://refotografia.bandcamp.com/">Sound</a> |
-				<a href="https://github.com/refotografia">GitHub</a> |
-				<a href="https://exiliofoto.blogspot.com/">Ateliê</a></p>
-							
-						</footer>
-					</section>
->>>>>>> 3d1d031569c3a046cb8e7cc4d11c03a43a878b56
 
 		.print .frame {
 			border: 2px solid var(--keyline);
@@ -207,6 +200,35 @@
 	</figure>
 
 	<footer>© Guilherme Maranhão</footer>
+
+	<script>
+		// Measure what surrounds the photo (padding, caption, footer) so the whole
+		// page always fits in the window, whatever the font or line wrapping does.
+		(function () {
+			var root = document.documentElement;
+			var print = document.querySelector('.print');
+			var img = print.querySelector('.frame img');
+			var foot = document.querySelector('footer');
+			function fit() {
+				if (window.matchMedia('(max-width: 640px)').matches) {
+					root.style.removeProperty('--reserve');
+					return;
+				}
+				for (var i = 0; i < 3; i++) { // caption may rewrap at the new width
+					var cs = getComputedStyle(document.body);
+					var total = foot.getBoundingClientRect().bottom - print.getBoundingClientRect().top
+						+ parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+					var reserve = Math.ceil(total - img.getBoundingClientRect().height);
+					if (root.style.getPropertyValue('--reserve') === reserve + 'px') break;
+					root.style.setProperty('--reserve', reserve + 'px');
+				}
+			}
+			fit();
+			window.addEventListener('resize', fit);
+			window.addEventListener('load', fit);
+			if (document.fonts) document.fonts.ready.then(fit);
+		})();
+	</script>
 
 </body>
 </html>
